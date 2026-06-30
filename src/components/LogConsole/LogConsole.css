@@ -1,0 +1,62 @@
+.log-content {
+  padding: 0 16px 16px;
+}
+
+.log-actions {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.log-empty {
+  text-align: center;
+  color: var(--on-surface-variant);
+  font-size: 13px;
+  padding: 16px;
+  margin: 0;
+}
+
+.log-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 250px;
+  overflow-y: auto;
+}
+
+.log-entry {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 6px 10px;
+  background: var(--surface-variant);
+  border-radius: 8px;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.log-icon {
+  flex-shrink: 0;
+  width: 16px;
+  text-align: center;
+}
+
+.log-message {
+  flex: 1;
+  color: var(--on-surface);
+  word-break: break-word;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: 11px;
+}
+
+.log-time {
+  flex-shrink: 0;
+  color: var(--on-surface-variant);
+  font-size: 11px;
+}
+
+.log-info .log-icon { color: var(--primary); }
+.log-refresh .log-icon { color: var(--tertiary); }
+.log-clipboard .log-icon { color: var(--secondary); }
+.log-download .log-icon { color: var(--tertiary); }
+.log-error .log-icon { color: var(--error); }

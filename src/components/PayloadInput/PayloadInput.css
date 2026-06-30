@@ -1,0 +1,49 @@
+.payload-textarea {
+  width: 100%;
+  min-height: 100px;
+  padding: 12px 14px;
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--on-surface);
+  font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+  font-size: 13px;
+  line-height: 1.5;
+  resize: vertical;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+}
+
+.payload-textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.payload-textarea::placeholder {
+  color: var(--on-surface-variant);
+  opacity: 0.6;
+}
+
+.payload-errors {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.payload-error {
+  display: inline-block;
+  padding: 4px 10px;
+  background: var(--error-container);
+  color: var(--on-error-container);
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.payload-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}

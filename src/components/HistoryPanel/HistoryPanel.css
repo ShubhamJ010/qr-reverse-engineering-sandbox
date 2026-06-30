@@ -1,0 +1,71 @@
+.history-content {
+  padding: 0 16px 16px;
+}
+
+.history-actions {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.btn-sm {
+  padding: 6px 12px;
+  font-size: 12px;
+}
+
+.btn-danger {
+  color: var(--error);
+}
+
+.history-empty {
+  text-align: center;
+  color: var(--on-surface-variant);
+  font-size: 13px;
+  padding: 16px;
+  margin: 0;
+}
+
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.history-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  background: var(--surface-variant);
+  border-radius: 10px;
+  gap: 8px;
+}
+
+.history-item-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.history-item-ref {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--primary);
+}
+
+.history-item-desc {
+  font-size: 13px;
+  color: var(--on-surface);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.history-item-time {
+  font-size: 11px;
+  color: var(--on-surface-variant);
+}

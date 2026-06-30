@@ -1,0 +1,37 @@
+.countdown-visual {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  width: 52px;
+  height: 52px;
+  margin: 0 auto 12px;
+}
+
+.countdown-ring {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.countdown-number {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--primary);
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  z-index: 1;
+}
+
+.countdown-bar {
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.countdown-bar-fill {
+  height: 100%;
+  background: var(--primary);
+  border-radius: 2px;
+  transition: width 0.3s linear;
+}

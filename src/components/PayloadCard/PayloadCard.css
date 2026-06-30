@@ -1,0 +1,48 @@
+.payload-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.payload-field {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px;
+  background: var(--surface-variant);
+  border-radius: 10px;
+}
+
+.field-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--on-surface-variant);
+}
+
+.field-value {
+  font-size: 14px;
+  color: var(--on-surface);
+  word-break: break-all;
+}
+
+.mono {
+  font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+}
+
+.payload-raw {
+  margin-top: 12px;
+  padding: 10px 12px;
+  background: var(--surface-variant);
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.payload-raw-text {
+  font-size: 12px;
+  line-height: 1.5;
+  word-break: break-all;
+}

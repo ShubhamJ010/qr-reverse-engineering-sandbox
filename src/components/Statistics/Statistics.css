@@ -1,0 +1,26 @@
+.stats-content {
+  padding: 0 16px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.stat-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  background: var(--surface-variant);
+  border-radius: 10px;
+}
+
+.stat-label {
+  font-size: 13px;
+  color: var(--on-surface-variant);
+}
+
+.stat-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--on-surface);
+}
