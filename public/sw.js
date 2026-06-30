@@ -1,8 +1,8 @@
 const CACHE_NAME = 'qr-sandbox-v1';
 const ASSETS = [
-  '/qr-sandbox/',
-  '/qr-sandbox/index.html',
-  '/qr-sandbox/manifest.json',
+  '/qr-reverse-engineering-sandbox/',
+  '/qr-reverse-engineering-sandbox/index.html',
+  '/qr-reverse-engineering-sandbox/manifest.json',
 ];
 
 self.addEventListener('install', (event) => {
@@ -36,7 +36,7 @@ self.addEventListener('fetch', (event) => {
       });
     }).catch(() => {
       if (event.request.destination === 'document') {
-        return caches.match('/qr-sandbox/');
+        return caches.match('/qr-reverse-engineering-sandbox/');
       }
     })
   );
