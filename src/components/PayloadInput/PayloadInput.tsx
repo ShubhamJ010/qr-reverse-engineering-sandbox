@@ -10,11 +10,14 @@ interface Props {
   onPayloadParsed: (raw: string) => void;
 }
 
+type ScanStatus = null | { type: 'ok'; text: string; detail: string } | { type: 'error'; text: string; detail: string };
+
 export function PayloadInput({ onPayloadParsed }: Props) {
   const [input, setInput] = useState('');
   const [errors, setErrors] = useState<string[]>([]);
   const [scannerOpen, setScannerOpen] = useState(false);
   const [showManual, setShowManual] = useState(false);
+  const [scanStatus, setScanStatus] = useState<ScanStatus>(null);
   const { copied } = useClipboard();
 
   const handleParse = useCallback(() => {
@@ -44,30 +47,37 @@ export function PayloadInput({ onPayloadParsed }: Props) {
   const handleClear = useCallback(() => {
     setInput('');
     setErrors([]);
+    setScanStatus(null);
   }, []);
 
   const handleExample = useCallback(() => {
     setInput(EXAMPLE_PAYLOAD);
     setErrors([]);
+    setScanStatus(null);
   }, []);
 
   const handleScan = useCallback(
     (scannedText: string) => {
       setInput(scannedText);
       setErrors([]);
-      setTimeout(() => {
-        const validationErrors = validatePayload(scannedText);
-        if (validationErrors.length > 0) {
-          setErrors(validationErrors.map((e) => e.message));
-          return;
-        }
-        const parsed = parsePayload(scannedText);
-        if (!parsed) {
-          setErrors(['Invalid payload format']);
-          return;
-        }
-        onPayloadParsed(scannedText.trim());
-      }, 0);
+
+      const validationErrors = validatePayload(scannedText);
+      if (validationErrors.length > 0) {
+        const msgs = validationErrors.map((e) => e.message).join('; ');
+        setScanStatus({ type: 'error', text: 'Wrong format', detail: msgs + '\n\nGot: ' + scannedText });
+        setErrors(validationErrors.map((e) => e.message));
+        return;
+      }
+
+      const parsed = parsePayload(scannedText);
+      if (!parsed) {
+        setScanStatus({ type: 'error', text: 'Parse failed', detail: scannedText });
+        setErrors(['Invalid payload format']);
+        return;
+      }
+
+      setScanStatus({ type: 'ok', text: 'Payload loaded', detail: scannedText });
+      onPayloadParsed(scannedText.trim());
     },
     [onPayloadParsed]
   );
@@ -90,7 +100,11 @@ export function PayloadInput({ onPayloadParsed }: Props) {
         </p>
         <button
           className="btn btn-primary btn-scan"
-          onClick={() => setScannerOpen(true)}
+          onClick={() => {
+            setScanStatus(null);
+            setErrors([]);
+            setScannerOpen(true);
+          }}
           aria-label="Scan QR code"
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -104,6 +118,18 @@ export function PayloadInput({ onPayloadParsed }: Props) {
           Scan QR Code
         </button>
       </div>
+
+      {scanStatus && (
+        <div className={`scan-status scan-status-${scanStatus.type}`}>
+          <div className="scan-status-header">
+            <span className="scan-status-icon">
+              {scanStatus.type === 'ok' ? '✓' : '✗'}
+            </span>
+            <span className="scan-status-text">{scanStatus.text}</span>
+          </div>
+          <code className="scan-status-detail mono">{scanStatus.detail}</code>
+        </div>
+      )}
 
       <button
         className="btn btn-ghost toggle-manual"
@@ -121,6 +147,7 @@ export function PayloadInput({ onPayloadParsed }: Props) {
             onChange={(e) => {
               setInput(e.target.value);
               setErrors([]);
+              setScanStatus(null);
             }}
             onKeyDown={handleKeyDown}
             placeholder="G10B5243Z26630202911993#2026-06-30 15:31:19#1 x Today's Special Dinner#463"
