@@ -8,7 +8,7 @@ interface Props {
 export function PayloadCard({ payload }: Props) {
   return (
     <div className="payload-card card">
-      <h2 className="card-title">Parsed Payload</h2>
+      <h2 className="card-title card-title-padded">Parsed Payload</h2>
       <div className="payload-fields">
         <div className="payload-field">
           <span className="field-label">Reference ID</span>

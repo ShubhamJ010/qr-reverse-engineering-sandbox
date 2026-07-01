@@ -1,48 +1,44 @@
 .payload-fields {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: var(--space-sm);
+  padding: var(--space-md) var(--space-lg) var(--space-lg);
 }
 
 .payload-field {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  padding: 10px 12px;
-  background: var(--surface-variant);
-  border-radius: 10px;
-}
-
-.field-label {
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: var(--on-surface-variant);
+  gap: 3px;
+  padding: var(--space-sm) var(--space-md);
+  background: var(--surface-raised);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
 }
 
 .field-value {
-  font-size: 14px;
-  color: var(--on-surface);
+  font-size: 13px;
+  color: var(--text-primary);
   word-break: break-all;
 }
 
 .mono {
-  font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+  font-family: var(--font-mono);
 }
 
 .payload-raw {
-  margin-top: 12px;
-  padding: 10px 12px;
-  background: var(--surface-variant);
-  border-radius: 10px;
+  margin: 0 var(--space-lg) var(--space-lg);
+  padding: var(--space-sm) var(--space-md);
+  background: var(--surface-raised);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
 
 .payload-raw-text {
-  font-size: 12px;
-  line-height: 1.5;
+  font-size: 11px;
+  line-height: 1.6;
   word-break: break-all;
+  color: var(--accent);
 }

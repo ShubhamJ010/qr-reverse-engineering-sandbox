@@ -1,83 +1,48 @@
-.developer-panel .card-header-btn {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 16px 16px 12px;
-  color: var(--on-surface);
-}
-
-.card-header-content {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.card-badge {
-  font-size: 10px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  padding: 2px 8px;
-  background: var(--primary-container);
-  color: var(--on-primary-container);
-  border-radius: 6px;
-}
-
-.chevron {
-  transition: transform 0.2s;
-  color: var(--on-surface-variant);
-}
-
-.chevron-open {
-  transform: rotate(180deg);
-}
-
 .developer-fields {
-  padding: 0 16px 16px;
+  padding: 0 var(--space-lg) var(--space-lg);
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: var(--space-sm);
 }
 
 .dev-field {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 3px;
 }
 
 .dev-input {
-  padding: 10px 12px;
-  border: 2px solid var(--border);
-  border-radius: 10px;
-  background: var(--surface-variant);
-  color: var(--on-surface);
-  font-size: 14px;
-  transition: border-color 0.2s;
-  box-sizing: border-box;
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-raised);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 13px;
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
 
 .dev-input:focus {
   outline: none;
-  border-color: var(--primary);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-dim);
 }
 
 .dev-raw-preview {
-  margin-top: 4px;
-  padding: 10px 12px;
-  background: var(--surface-variant);
-  border-radius: 10px;
+  margin-top: var(--space-xs);
+  padding: var(--space-sm) var(--space-md);
+  background: var(--surface-raised);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
 
 .dev-raw-preview code {
-  font-size: 12px;
-  line-height: 1.5;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.6;
   word-break: break-all;
-  color: var(--on-surface);
+  color: var(--accent);
 }

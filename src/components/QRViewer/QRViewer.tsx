@@ -1,39 +1,20 @@
 import { useRef, useCallback, useState, useEffect } from 'react';
 import { QRCodeCanvas } from 'qrcode.react';
 import { useClipboard } from '../../hooks/useClipboard';
-import { useAppContext } from '../../context/AppContext';
-import { generateQRFilename } from '../../services/qrService';
+import { encodeShareUrl } from '../../utils/share';
 import './QRViewer.css';
 
 interface Props {
   value: string | null;
+  shareMode?: boolean;
 }
 
-function getCSSVar(name: string): string {
-  return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-}
-
-export function QRViewer({ value }: Props) {
+export function QRViewer({ value, shareMode }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fullscreenCanvasRef = useRef<HTMLCanvasElement>(null);
   const { copied, copy } = useClipboard();
-  const { addLog } = useAppContext();
-  const [colors, setColors] = useState({ bg: '#FFFFFF', fg: '#1A1C1E' });
   const [maximized, setMaximized] = useState(false);
   const [brightness, setBrightness] = useState(1.5);
-
-  useEffect(() => {
-    const update = () => {
-      setColors({
-        bg: getCSSVar('--surface') || '#FFFFFF',
-        fg: getCSSVar('--on-surface') || '#1A1C1E',
-      });
-    };
-    update();
-    const observer = new MutationObserver(update);
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
-    return () => observer.disconnect();
-  }, []);
 
   useEffect(() => {
     if (!maximized) return;
@@ -44,33 +25,31 @@ export function QRViewer({ value }: Props) {
     return () => document.removeEventListener('keydown', handleKey);
   }, [maximized]);
 
-  const handleDownload = useCallback(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const filename = generateQRFilename();
-    const link = document.createElement('a');
-    link.download = filename;
-    link.href = canvas.toDataURL('image/png');
-    link.click();
-    addLog('download', `Downloaded QR as ${filename}`);
-  }, [addLog]);
+  const handleShare = useCallback(() => {
+    if (!value) return;
+    const parts = value.split('#');
+    if (parts.length !== 4) return;
+    const payload = {
+      referenceId: parts[0],
+      timestamp: parts[1],
+      description: parts[2],
+      itemId: parts[3],
+    };
+    copy(encodeShareUrl(payload));
+  }, [value, copy]);
 
   const handleCopyPayload = useCallback(() => {
-    if (value) {
-      copy(value);
-      addLog('clipboard', 'Copied payload to clipboard');
-    }
-  }, [value, copy, addLog]);
+    if (value) copy(value);
+  }, [value, copy]);
 
   const handleMaximize = useCallback(() => {
     setMaximized(true);
-    addLog('info', 'QR fullscreen mode opened');
-  }, [addLog]);
+  }, []);
 
   if (!value) {
     return (
       <div className="qr-viewer card">
-        <h2 className="card-title">QR Code</h2>
+        <h2 className="card-title card-title-padded">QR Code</h2>
         <div className="qr-placeholder">
           <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
             <rect x="3" y="3" width="7" height="7" rx="1" />
@@ -90,17 +69,17 @@ export function QRViewer({ value }: Props) {
   return (
     <>
       <div className="qr-viewer card">
-        <h2 className="card-title">QR Code</h2>
+        {!shareMode && <h2 className="card-title card-title-padded">QR Code</h2>}
         <div className="qr-display">
-          <div className="qr-canvas-wrapper">
+          <div className={`qr-canvas-wrapper${shareMode ? ' qr-share' : ''}`}>
             <QRCodeCanvas
               ref={canvasRef}
               value={value}
-              size={220}
+              size={shareMode ? 260 : 220}
               level="M"
               includeMargin
-              bgColor={colors.bg}
-              fgColor={colors.fg}
+              bgColor="#FFFFFF"
+              fgColor="#1A1C1E"
             />
           </div>
         </div>
@@ -112,20 +91,24 @@ export function QRViewer({ value }: Props) {
           >
             Maximize
           </button>
-          <button
-            className="btn btn-secondary"
-            onClick={handleDownload}
-            aria-label="Download QR as PNG"
-          >
-            Download PNG
-          </button>
-          <button
-            className="btn btn-secondary"
-            onClick={handleCopyPayload}
-            aria-label="Copy payload string"
-          >
-            {copied ? 'Copied!' : 'Copy Payload'}
-          </button>
+          {!shareMode && (
+            <>
+              <button
+                className="btn btn-secondary"
+                onClick={handleShare}
+                aria-label="Share QR link"
+              >
+                {copied ? 'Link Copied!' : 'Share'}
+              </button>
+              <button
+                className="btn btn-secondary"
+                onClick={handleCopyPayload}
+                aria-label="Copy payload string"
+              >
+                {copied ? 'Copied!' : 'Copy Payload'}
+              </button>
+            </>
+          )}
         </div>
       </div>
 

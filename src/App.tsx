@@ -1,8 +1,10 @@
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useAppContext } from './context/AppContext';
 import { parsePayload, payloadToString } from './utils/parser';
 import { generatePayload } from './services/payloadService';
 import { useCountdown } from './hooks/useCountdown';
+import { decodeSharePayload } from './utils/share';
+import { REFRESH_INTERVAL } from './models/Payload';
 import { Header } from './components/Header/Header';
 import { Footer } from './components/Footer/Footer';
 import { PayloadInput } from './components/PayloadInput/PayloadInput';
@@ -10,11 +12,6 @@ import { PayloadCard } from './components/PayloadCard/PayloadCard';
 import { QRViewer } from './components/QRViewer/QRViewer';
 import { Countdown } from './components/Countdown/Countdown';
 import { DeveloperPanel } from './components/DeveloperPanel/DeveloperPanel';
-import { HistoryPanel } from './components/HistoryPanel/HistoryPanel';
-import { LogConsole } from './components/LogConsole/LogConsole';
-import { Settings } from './components/Settings/Settings';
-import { Statistics } from './components/Statistics/Statistics';
-import { FutureTools } from './components/FutureTools/FutureTools';
 import './styles/global.css';
 
 export default function App() {
@@ -24,30 +21,31 @@ export default function App() {
     basePayload,
     setBasePayload,
     settings,
-    addHistory,
-    addLog,
-    refreshCount,
-    setRefreshCount,
   } = useAppContext();
 
+  // Memoize so it's computed once on mount — decodeSharePayload() returns a new
+  // object reference every call, which would re-fire the share-mode effect on
+  // every render (each second) and regenerate the payload prematurely.
+  const sharePayload = useMemo(() => decodeSharePayload(), []);
+  const shareMode = sharePayload !== null;
+
+  const basePayloadRef = useRef(basePayload);
+  basePayloadRef.current = basePayload;
+
+  const setPayloadRef = useRef(setPayload);
+  setPayloadRef.current = setPayload;
+
   const handleRefresh = useCallback(() => {
-    if (!basePayload) return;
-    const newPayload = generatePayload(basePayload);
-    setPayload(newPayload);
-    addHistory(newPayload);
-    setRefreshCount(refreshCount + 1);
-    addLog('refresh', `Refreshed: ${newPayload.timestamp}`);
-  }, [basePayload, setPayload, addHistory, setRefreshCount, addLog, refreshCount]);
+    const bp = basePayloadRef.current;
+    if (!bp) return;
+    setPayloadRef.current(generatePayload(bp));
+  }, []);
 
   const { seconds, reset } = useCountdown({
-    initialSeconds: settings.refreshInterval,
-    active: settings.autoRefresh && !!basePayload,
+    initialSeconds: REFRESH_INTERVAL,
+    active: !!basePayload,
     onComplete: handleRefresh,
   });
-
-  useEffect(() => {
-    reset(settings.refreshInterval);
-  }, [settings.refreshInterval, reset]);
 
   useEffect(() => {
     if (settings.darkMode) {
@@ -57,41 +55,59 @@ export default function App() {
     }
   }, [settings.darkMode]);
 
+  // Share mode: load payload from URL (runs once on mount)
+  useEffect(() => {
+    if (!sharePayload) return;
+    const parsed = parsePayload(payloadToString(sharePayload));
+    if (!parsed) return;
+
+    setBasePayload(parsed);
+    setPayload(generatePayload(parsed));
+  }, [sharePayload]);
+
   const handlePayloadParsed = useCallback(
     (raw: string) => {
       const parsed = parsePayload(raw);
       if (parsed) {
         setBasePayload(parsed);
-        const newPayload = generatePayload(parsed);
-        setPayload(newPayload);
-        addHistory(newPayload);
-        setRefreshCount(0);
-        reset(settings.refreshInterval);
-        addLog('parse', `Payload parsed: ${parsed.referenceId}#${parsed.timestamp.substring(0, 10)}#...`);
+        setPayload(generatePayload(parsed));
+        reset(REFRESH_INTERVAL);
       }
     },
-    [setBasePayload, setPayload, addHistory, setRefreshCount, reset, settings.refreshInterval, addLog]
+    [setBasePayload, setPayload, reset]
   );
-
-  const handleManualRefresh = useCallback(() => {
-    handleRefresh();
-    reset(settings.refreshInterval);
-    addLog('info', 'Manual refresh triggered');
-  }, [handleRefresh, reset, settings.refreshInterval, addLog]);
 
   const handleDevUpdate = useCallback(
     (updatedPayload: import('./models/Payload').Payload) => {
       setBasePayload(updatedPayload);
-      const newPayload = generatePayload(updatedPayload);
-      setPayload(newPayload);
-      addHistory(newPayload);
-      addLog('info', `Developer updated: ${payloadToString(updatedPayload)}`);
+      setPayload(generatePayload(updatedPayload));
     },
-    [setBasePayload, setPayload, addHistory, addLog]
+    [setBasePayload, setPayload]
   );
 
   const qrValue = payload ? payload.raw : null;
 
+  // ── Share mode: minimal view ──
+  if (shareMode) {
+    return (
+      <div className="app app-share">
+        <main className="app-content share-content">
+          {payload && (
+            <>
+              <QRViewer value={qrValue} shareMode />
+              <Countdown
+                seconds={seconds}
+                totalSeconds={REFRESH_INTERVAL}
+                active
+              />
+            </>
+          )}
+        </main>
+      </div>
+    );
+  }
+
+  // ── Full mode ──
   return (
     <div className="app">
       <Header />
@@ -106,38 +122,20 @@ export default function App() {
             <QRViewer value={qrValue} />
             <Countdown
               seconds={seconds}
-              totalSeconds={settings.refreshInterval}
-              active={settings.autoRefresh}
+              totalSeconds={REFRESH_INTERVAL}
+              active
             />
-            {settings.autoRefresh && (
-              <button
-                className="btn btn-primary"
-                onClick={handleManualRefresh}
-                style={{ width: '100%' }}
-                aria-label="Refresh QR now"
-              >
-                Refresh Now
-              </button>
-            )}
             <DeveloperPanel payload={basePayload} onUpdate={handleDevUpdate} />
-            <Statistics />
           </>
         )}
 
-        <Settings />
-        <HistoryPanel />
-        <LogConsole />
-        <FutureTools />
-
         {basePayload && (
           <button
-            className="btn btn-ghost"
+            className="btn btn-ghost new-payload-btn"
             onClick={() => {
               setBasePayload(null);
               setPayload(null);
-              addLog('info', 'Payload cleared');
             }}
-            style={{ width: '100%' }}
           >
             New Payload
           </button>

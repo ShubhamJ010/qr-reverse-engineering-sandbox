@@ -1,49 +1,97 @@
+.scan-hero {
+  text-align: center;
+  padding: var(--space-xl) var(--space-lg) var(--space-md);
+}
+
+.scan-hero .card-title {
+  font-size: 18px;
+  margin-bottom: var(--space-xs);
+}
+
+.btn-scan {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 32px;
+  font-size: 15px;
+  font-weight: 700;
+  border-radius: var(--radius-lg);
+  min-height: 54px;
+  margin-top: var(--space-lg);
+  letter-spacing: 0.01em;
+}
+
+.btn-scan svg {
+  opacity: 0.9;
+}
+
+.toggle-manual {
+  display: block;
+  width: 100%;
+  text-align: center;
+  font-size: 12px;
+  font-family: var(--font-mono);
+  padding: var(--space-sm);
+  letter-spacing: 0.02em;
+}
+
+.manual-section {
+  padding: 0 var(--space-lg) var(--space-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
 .payload-textarea {
   width: 100%;
-  min-height: 100px;
-  padding: 12px 14px;
-  border: 2px solid var(--border);
-  border-radius: 12px;
-  background: var(--surface);
-  color: var(--on-surface);
-  font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
-  font-size: 13px;
-  line-height: 1.5;
+  min-height: 90px;
+  padding: var(--space-md);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-raised);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.6;
   resize: vertical;
-  transition: border-color 0.2s;
-  box-sizing: border-box;
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
 
 .payload-textarea:focus {
   outline: none;
-  border-color: var(--primary);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-dim);
 }
 
 .payload-textarea::placeholder {
-  color: var(--on-surface-variant);
-  opacity: 0.6;
+  color: var(--text-tertiary);
+  font-size: 11px;
 }
 
 .payload-errors {
   display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 8px;
+  flex-direction: column;
+  gap: var(--space-xs);
 }
 
 .payload-error {
-  display: inline-block;
-  padding: 4px 10px;
-  background: var(--error-container);
-  color: var(--on-error-container);
-  border-radius: 8px;
+  display: block;
+  padding: var(--space-sm) var(--space-md);
+  background: var(--error-dim);
+  color: var(--error);
+  border-radius: var(--radius-sm);
   font-size: 12px;
   font-weight: 500;
+  border: 1px solid rgba(239, 68, 68, 0.15);
 }
 
 .payload-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 12px;
+  gap: var(--space-sm);
+}
+
+.payload-actions .btn {
+  flex: 1;
+  min-width: 0;
 }

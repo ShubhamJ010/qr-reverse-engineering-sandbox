@@ -5,7 +5,7 @@
   position: relative;
   width: 52px;
   height: 52px;
-  margin: 0 auto 12px;
+  margin: var(--space-md) auto var(--space-md);
 }
 
 .countdown-ring {
@@ -15,23 +15,24 @@
 }
 
 .countdown-number {
+  font-family: var(--font-mono);
   font-size: 20px;
   font-weight: 700;
-  color: var(--primary);
-  font-family: 'SF Mono', 'Fira Code', monospace;
+  color: var(--accent);
   z-index: 1;
 }
 
 .countdown-bar {
-  height: 4px;
-  background: var(--border);
+  height: 3px;
+  background: rgba(255, 255, 255, 0.06);
   border-radius: 2px;
   overflow: hidden;
+  margin: 0 var(--space-lg) var(--space-lg);
 }
 
 .countdown-bar-fill {
   height: 100%;
-  background: var(--primary);
+  background: var(--accent);
   border-radius: 2px;
   transition: width 0.3s linear;
 }

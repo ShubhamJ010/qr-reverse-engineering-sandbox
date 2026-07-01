@@ -15,7 +15,7 @@ export function Countdown({ seconds, totalSeconds, active }: Props) {
 
   return (
     <div className="countdown card">
-      <h2 className="card-title">Refreshing in</h2>
+      <h2 className="card-title card-title-padded">Refreshing in</h2>
       <div className="countdown-visual">
         <svg className="countdown-ring" width="52" height="52" viewBox="0 0 40 40">
           <circle
@@ -31,7 +31,7 @@ export function Countdown({ seconds, totalSeconds, active }: Props) {
             cy="20"
             r="18"
             fill="none"
-            stroke="var(--primary)"
+            stroke="var(--accent)"
             strokeWidth="3"
             strokeLinecap="round"
             strokeDasharray={circumference}
