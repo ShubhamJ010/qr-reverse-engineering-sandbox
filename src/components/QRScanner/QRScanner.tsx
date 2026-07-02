@@ -7,6 +7,9 @@ interface Props {
   onScan: (text: string) => void;
 }
 
+const MAX_ATTEMPTS = 6;
+const SCAN_INTERVAL_MS = 1000;
+
 async function getRearStream(): Promise<MediaStream> {
   try {
     return await navigator.mediaDevices.getUserMedia({
@@ -25,18 +28,112 @@ export function QRScanner({ isOpen, onClose, onScan }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [useNative, setUseNative] = useState<boolean | null>(null);
 
+  // Multi-scan state
+  const [scanHistory, setScanHistory] = useState<string[]>([]);
+  const [isMonitoring, setIsMonitoring] = useState(false);
+  const [isStable, setIsStable] = useState(false);
+  const [attempt, setAttempt] = useState(0);
+  const modeRef = useRef<'idle' | 'monitoring' | 'stable'>('idle');
+  const initialPayloadRef = useRef<string | null>(null);
+  const capturedRef = useRef(false);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
   onScanRef.current = onScan;
   onCloseRef.current = onClose;
 
+  function cleanup() {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((t) => t.stop());
+      streamRef.current = null;
+    }
+    if (scannerRef.current) {
+      scannerRef.current.stop();
+      scannerRef.current = null;
+    }
+  }
+
+  function resetMultiScan() {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+    modeRef.current = 'idle';
+    initialPayloadRef.current = null;
+    capturedRef.current = false;
+    setScanHistory([]);
+    setIsMonitoring(false);
+    setIsStable(false);
+    setAttempt(0);
+  }
+
+  const handleClose = useCallback(() => {
+    resetMultiScan();
+    onCloseRef.current();
+  }, []);
+
+  const handleUsePayload = useCallback(() => {
+    const payload = initialPayloadRef.current;
+    resetMultiScan();
+    if (payload) {
+      onScanRef.current(payload);
+    }
+    onCloseRef.current();
+  }, []);
+
   const handleDetected = useCallback((text: string) => {
-    if (text && text.trim()) {
-      onScanRef.current(text.trim());
-      onCloseRef.current();
+    if (!text?.trim()) return;
+    const payload = text.trim();
+
+    if (modeRef.current === 'idle') {
+      // First detection — start monitoring
+      initialPayloadRef.current = payload;
+      capturedRef.current = true;
+      modeRef.current = 'monitoring';
+      setIsMonitoring(true);
+      setAttempt(1);
+      setScanHistory([payload]);
+
+      intervalRef.current = setInterval(() => {
+        capturedRef.current = false;
+        setAttempt((prev) => {
+          const next = prev + 1;
+          if (next > MAX_ATTEMPTS) {
+            // Stable — no change detected
+            if (intervalRef.current) {
+              clearInterval(intervalRef.current);
+              intervalRef.current = null;
+            }
+            modeRef.current = 'stable';
+            setIsMonitoring(false);
+            setIsStable(true);
+            cleanup();
+          }
+          return next;
+        });
+      }, SCAN_INTERVAL_MS);
+    } else if (modeRef.current === 'monitoring' && !capturedRef.current) {
+      // Subsequent detection during monitoring
+      capturedRef.current = true;
+
+      if (payload !== initialPayloadRef.current) {
+        // Change detected — close immediately with new payload
+        if (intervalRef.current) {
+          clearInterval(intervalRef.current);
+          intervalRef.current = null;
+        }
+        modeRef.current = 'idle';
+        onScanRef.current(payload);
+        onCloseRef.current();
+        return;
+      }
+
+      setScanHistory((prev) => [...prev, payload]);
     }
   }, []);
 
   useEffect(() => {
     if (!isOpen) {
+      resetMultiScan();
       cleanup();
       setError(null);
       setUseNative(null);
@@ -63,7 +160,6 @@ export function QRScanner({ isOpen, onClose, onScan }: Props) {
       await new Promise((r) => requestAnimationFrame(r));
       if (cancelled) return;
 
-      // Check if native BarcodeDetector is available
       const BarcodeDetectorCtor = 'BarcodeDetector' in globalThis
         ? (globalThis as unknown as { BarcodeDetector: new (opts?: { formats: string[] }) => { detect: (source: CanvasImageSource) => Promise<{ rawValue: string }[]> } }).BarcodeDetector
         : null;
@@ -71,7 +167,6 @@ export function QRScanner({ isOpen, onClose, onScan }: Props) {
       if (BarcodeDetectorCtor) {
         try {
           const detector = new BarcodeDetectorCtor({ formats: ['qr_code'] });
-          // Test that it actually works
           await detector.detect(document.createElement('canvas'));
           setUseNative(true);
 
@@ -111,7 +206,6 @@ export function QRScanner({ isOpen, onClose, onScan }: Props) {
               const barcodes = await detector.detect(videoEl);
               if (barcodes.length > 0 && !cancelled) {
                 handleDetected(barcodes[0].rawValue);
-                return;
               }
             } catch {
               // ignore per-frame errors
@@ -127,7 +221,7 @@ export function QRScanner({ isOpen, onClose, onScan }: Props) {
         }
       }
 
-      // Fallback: html5-qrcode library (it manages its own camera)
+      // Fallback: html5-qrcode library
       setUseNative(false);
       try {
         const { Html5Qrcode } = await import('html5-qrcode');
@@ -166,48 +260,93 @@ export function QRScanner({ isOpen, onClose, onScan }: Props) {
     return () => {
       cancelled = true;
       cancelAnimationFrame(animationId);
+      resetMultiScan();
       cleanup();
     };
   }, [isOpen, handleDetected]);
 
-  function cleanup() {
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach((t) => t.stop());
-      streamRef.current = null;
-    }
-    if (scannerRef.current) {
-      scannerRef.current.stop();
-      scannerRef.current = null;
-    }
-  }
-
   if (!isOpen) return null;
 
+  const progressPercent = isMonitoring ? (attempt / MAX_ATTEMPTS) * 100 : 0;
+
   return (
-    <div className="scanner-overlay" onClick={onClose} role="dialog" aria-label="QR Scanner">
+    <div className="scanner-overlay" onClick={handleClose} role="dialog" aria-label="QR Scanner">
       <div className="scanner-modal" onClick={(e) => e.stopPropagation()}>
         <div className="scanner-header">
-          <h3>Scan QR Code</h3>
-          <button className="scanner-close" onClick={onClose} aria-label="Close scanner">
+          <h3>
+            {isStable
+              ? 'Scan Complete'
+              : isMonitoring
+                ? `Scanning… ${attempt}/${MAX_ATTEMPTS}`
+                : 'Scan QR Code'}
+          </h3>
+          <button className="scanner-close" onClick={handleClose} aria-label="Close scanner">
             &times;
           </button>
         </div>
         <div className="scanner-body">
-          {useNative !== false && (
-            <div className="scanner-reader">
-              <video
-                id="qr-scanner-video"
-                className="scanner-video"
-                playsInline
-                muted
-                style={{ width: '100%', borderRadius: 'var(--radius-md)' }}
-              />
+          {/* Camera view — hidden once stable */}
+          {!isStable && (
+            <>
+              {useNative !== false && (
+                <div className="scanner-reader">
+                  <video
+                    id="qr-scanner-video"
+                    className="scanner-video"
+                    playsInline
+                    muted
+                    style={{ width: '100%', borderRadius: 'var(--radius-md)' }}
+                  />
+                </div>
+              )}
+              {useNative === false && (
+                <div id="qr-scanner-fallback" className="scanner-reader" />
+              )}
+            </>
+          )}
+
+          {error && <p className="scanner-error">{error}</p>}
+
+          {/* Monitoring progress bar */}
+          {isMonitoring && (
+            <div className="scan-progress">
+              <div className="scan-progress-bar">
+                <div
+                  className="scan-progress-fill"
+                  style={{ width: `${progressPercent}%` }}
+                />
+              </div>
+              <span className="scan-progress-label">
+                Checking for changes…
+              </span>
             </div>
           )}
-          {useNative === false && (
-            <div id="qr-scanner-fallback" className="scanner-reader" />
+
+          {/* Stable results */}
+          {isStable && (
+            <div className="scan-stable">
+              <div className="scan-stable-header">
+                <span className="scan-stable-icon">✓</span>
+                <span>Payload stable across {scanHistory.length} scans</span>
+              </div>
+              <ul className="scan-history">
+                {scanHistory.map((payload, i) => (
+                  <li key={i} className="scan-history-item">
+                    <span className="scan-history-label">Scan {i + 1}</span>
+                    <code className="scan-history-payload mono">{payload}</code>
+                  </li>
+                ))}
+              </ul>
+              <div className="scan-stable-actions">
+                <button className="btn btn-primary" onClick={handleUsePayload}>
+                  Use This Payload
+                </button>
+                <button className="btn btn-ghost" onClick={handleClose}>
+                  Cancel
+                </button>
+              </div>
+            </div>
           )}
-          {error && <p className="scanner-error">{error}</p>}
         </div>
       </div>
     </div>
